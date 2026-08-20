@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VidLive Pro — Auto Live Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body {
+      background: radial-gradient(ellipse at top, #0f0c29, #1a1a3e, #0a0a1a);
+      min-height: 100vh;
+      transition: background 0.5s ease;
+      perspective: 1200px;
+    }
+    body.light-mode {
+      background: radial-gradient(ellipse at top, #e0e7ff, #f1f5f9, #e2e8f0);
+    }
+    body.light-mode .glass {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    body.light-mode .glass-input {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #1e293b;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+    }
+    body.light-mode .glass-input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.2), inset 0 2px 8px rgba(0,0,0,0.05);
+    }
+    body.light-mode .text-white { color: #1e293b; }
+    body.light-mode .text-slate-400 { color: #64748b; }
+    body.light-mode .text-slate-500 { color: #64748b; }
+    body.light-mode .text-slate-300 { color: #334155; }
+    body.light-mode .text-slate-600 { color: #475569; }
+    body.light-mode .bg-white\/5 { background: rgba(0,0,0,0.03); }
+    body.light-mode .border-white\/5 { border-color: rgba(0,0,0,0.06); }
+    body.light-mode .border-white\/10 { border-color: rgba(0,0,0,0.1); }
+    body.light-mode .divide-white\/5 > * + * { border-color: rgba(0,0,0,0.06); }
+    body.light-mode .bg-black\/60 { background: rgba(255,255,255,0.3); }
+    body.light-mode .bg-black\/70 { background: rgba(255,255,255,0.85); color: #1e293b; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    body.light-mode .bg-black\/30 { background: rgba(255,255,255,0.4); }
+    body.light-mode .stat-box { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8); }
+    body.light-mode .metric-bar { background: rgba(0,0,0,0.08); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    body.light-mode .badge { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+    body.light-mode .btn-export { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    body.light-mode .btn-export:hover { background: rgba(0,0,0,0.1); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    body.light-mode .tag-chip { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); color: #64748b; }
+    body.light-mode .tag-chip:hover { background: rgba(0,0,0,0.08); color: #334155; }
+    body.light-mode .history-item:hover { background: rgba(0,0,0,0.05); }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+      transform: translateZ(0);
+    }
+    .glass:hover { transform: translateZ(20px) translateY(-2px); box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .glass-input {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+      transition: 0.3s;
+    }
+    .glass-input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.2), inset 0 2px 10px rgba(0,0,0,0.3);
+      outline: none;
+    }
+    .btn-red {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: 0.3s;
+    }
+    .btn-red:hover { transform: scale(1.02) translateZ(10px); box-shadow: 0 15px 40px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+    .history-item { transition: 0.2s; cursor: pointer; }
+    .history-item:hover { background: rgba(255, 255, 255, 0.05); transform: translateX(4px); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 10px; }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px) translateZ(0); } to { opacity: 1; transform: translateY(0) translateZ(0); } }
+    .badge {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .live-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse-dot 1.2s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(34,197,94,0.5);
+    }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+    .stat-flash { animation: flash-gold 0.6s ease; }
+    @keyframes flash-gold {
+      0% { color:#fbbf24; transform:scale(1.12); text-shadow:0 0 20px rgba(251,191,36,0.5); }
+      100% { color:inherit; transform:scale(1); text-shadow:none; }
+    }
+    .countdown-number {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 30px rgba(251,191,36,0.2);
+      animation: countdown-pop 0.4s ease;
+      display: inline-block;
+    }
+    @keyframes countdown-pop { 0% { transform:scale(2); opacity:0; } 50% { transform:scale(0.9); opacity:1; } 100% { transform:scale(1); opacity:1; } }
+    .btn-download {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 8px 25px rgba(5,150,105,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: 0.3s;
+    }
+    .btn-download:hover { transform: scale(1.02) translateZ(10px); box-shadow: 0 15px 40px rgba(5,150,105,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+    .tag-chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      display: inline-block;
+      margin: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .tag-chip:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; transform: translateZ(5px); }
+    .ai-badge { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
+    .no-ai-badge { background: rgba(100,116,139,0.15); border-color: rgba(100,116,139,0.2); color: #94a3b8; }
+    .unknown-ai-badge { background: rgba(148,163,184,0.1); border-color: rgba(148,163,184,0.15); color: #94a3b8; }
+    .category-badge { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.2); color: #a5b4fc; }
+    .stat-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: all 0.3s ease;
+      transform: translateZ(0);
+    }
+    .stat-box:hover { transform: translateY(-4px) translateZ(15px); border-color: rgba(255,255,255,0.2); box-shadow: 0 15px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .metric-bar {
+      height: 6px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #ef4444, #f97316, #fbbf24);
+      box-shadow: 0 0 10px rgba(251,191,36,0.3);
+      transition: width 0.8s ease;
+    }
+    .metric-bar-fill.green { background: linear-gradient(90deg, #059669, #22c55e, #a3e635); box-shadow: 0 0 10px rgba(34,197,94,0.3); }
+    .metric-bar-fill.blue { background: linear-gradient(90deg, #2563eb, #3b82f6, #38bdf8); box-shadow: 0 0 10px rgba(59,130,246,0.3); }
+    .metric-bar-fill.purple { background: linear-gradient(90deg, #7c3aed, #8b5cf6, #c084fc); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
+    .btn-export {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: 0.2s;
+    }
+    .btn-export:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px) translateZ(10px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .compare-up { color: #22c55e; }
+    .compare-down { color: #ef4444; }
+    .compare-same { color: #94a3b8; }
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 50;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .theme-toggle:hover { transform: scale(1.1) rotate(15deg); background: rgba(255,255,255,0.2); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+    .theme-toggle i { color: #fbbf24; font-size: 1.2rem; text-shadow: 0 0 10px rgba(251,191,36,0.5); }
+    body.light-mode .theme-toggle { background: rgba(0,0,0,0.1); border-color: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    body.light-mode .theme-toggle i { color: #ef4444; text-shadow: 0 0 10px rgba(239,68,68,0.3); }
+    .copy-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 100;
+      opacity: 0;
+      transition: all 0.4s ease;
+      box-shadow: 0 10px 30px rgba(34,197,94,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .copy-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+    .modal-backdrop.show { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: rgba(20,20,40,0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      transform: scale(0.9) rotateX(10deg);
+      transition: transform 0.3s ease;
+    }
+    .modal-backdrop.show .modal-content { transform: scale(1) rotateX(0deg); }
+    body.light-mode .modal-content { background: rgba(255,255,255,0.95); border-color: rgba(0,0,0,0.1); box-shadow: 0 30px 80px rgba(0,0,0,0.2); }
+    /* Top Live Indicator */
+    .live-top {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      padding: 8px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: all 0.3s ease;
+    }
+    .live-top:hover { transform: scale(1.05) translateZ(10px); box-shadow: 0 12px 35px rgba(0,0,0,0.5); }
+    .live-top .live-dot { width: 12px; height: 12px; }
+    .live-top .live-label { color: #4ade80; font-weight: 600; font-size: 14px; text-shadow: 0 0 10px rgba(74,222,128,0.5); }
+    .live-top .refresh-icon {
+      color: #fbbf24;
+      animation: spin 1s linear infinite;
+      text-shadow: 0 0 10px rgba(251,191,36,0.5);
+    }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    body.light-mode .live-top { background: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.1); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    body.light-mode .live-top .live-label { color: #059669; text-shadow: 0 0 10px rgba(5,150,105,0.3); }
+    /* Hide countdown */
+    .countdown-hidden { display: none; }
+    /* Logo 3D */
+    .logo-3d {
+      transform: rotateX(15deg) rotateY(-15deg);
+      transition: transform 0.5s ease;
+    }
+    .logo-3d:hover { transform: rotateX(0deg) rotateY(0deg); }
+    .title-3d {
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .trend-indicator { display: inline-block; animation: trendPop 0.3s ease; }
+    @keyframes trendPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+  </style>
+</head>
+<body>
+
+  <!-- Top Live Indicator -->
+  <div id="liveTop" class="live-top hidden">
+    <span class="live-dot"></span>
+    <span class="live-label">LIVE</span>
+    <i class="fa-solid fa-rotate refresh-icon"></i>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button id="themeToggle" class="theme-toggle" title="Toggle theme">
+    <i class="fa-solid fa-moon"></i>
+  </button>
+
+  <!-- Copy Toast -->
+  <div id="copyToast" class="copy-toast">
+    <i class="fa-solid fa-check mr-2"></i> Copied to clipboard!
+  </div>
+
+  <!-- Channel Details Modal -->
+  <div id="channelModal" class="modal-backdrop">
+    <div class="modal-content" id="channelModalContent"></div>
+  </div>
+
+  <!-- Video Details Modal -->
+  <div id="videoModal" class="modal-backdrop">
+    <div class="modal-content" id="videoModalContent"></div>
+  </div>
+
+  <!-- Recent Uploads Modal -->
+  <div id="recentModal" class="modal-backdrop">
+    <div class="modal-content" id="recentModalContent"></div>
+  </div>
+
+  <!-- Today's Uploads Modal -->
+  <div id="todayModal" class="modal-backdrop">
+    <div class="modal-content" id="todayModalContent"></div>
+  </div>
+
+  <!-- Live Now Modal -->
+  <div id="liveModal" class="modal-backdrop">
+    <div class="modal-content" id="liveModalContent"></div>
+  </div>
+
+  <!-- Thumbnail Modal -->
+  <div id="thumbModal" class="modal-backdrop">
+    <div class="modal-content" id="thumbModalContent"></div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="logo-3d inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-red-600/20 border border-red-500/20 mb-3 shadow-2xl">
+        <i class="fa-brands fa-youtube text-red-500 text-3xl"></i>
+      </div>
+      <h1 class="title-3d text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+        Vid<span class="text-red-500">Live Pro</span>
+      </h1>
+      <p class="text-slate-400 mt-1 text-sm md:text-base">
+        Auto‑live every 3s • Raw numbers • Tags + Category + AI detection + Deep Analytics + Export
+      </p>
+    </div>
+
+    <!-- Search -->
+    <div class="glass rounded-3xl p-5 md:p-7 shadow-2xl">
+      <form id="videoForm" class="flex flex-col md:flex-row gap-3">
+        <div class="flex-1 relative">
+          <i class="fa-solid fa-link text-slate-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+          <input
+            id="videoUrl"
+            type="url"
+            required
+            placeholder="Paste YouTube URL here..."
+            class="glass-input w-full rounded-2xl pl-11 pr-24 py-3.5 text-white placeholder:text-slate-500 text-sm"
+          />
+          <button type="button" id="pasteBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-white/10 hover:bg-white/20 text-slate-300 px-3 py-1 rounded-full transition shadow-lg">
+            <i class="fa-regular fa-paste"></i> Paste
+          </button>
+        </div>
+        <button type="submit" class="btn-red rounded-2xl px-8 py-3.5 text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-magnifying-glass"></i> Preview
+        </button>
+      </form>
+      <div class="mt-3 flex flex-wrap gap-2 justify-center">
+        <span class="text-xs text-slate-500">Try:</span>
+        <button class="text-xs text-slate-400 hover:text-red-400 transition bg-white/5 px-3 py-1 rounded-full shadow" data-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Rick Astley</button>
+        <button class="text-xs text-slate-400 hover:text-red-400 transition bg-white/5 px-3 py-1 rounded-full shadow" data-url="https://youtu.be/9bZkp7q19f0">Gangnam Style</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden mt-8 text-center">
+      <div class="inline-block w-10 h-10 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin shadow-2xl"></div>
+      <p class="text-slate-400 text-sm mt-2">Fetching video & channel data...</p>
+    </div>
+
+    <!-- Output -->
+    <div id="output" class="mt-8 hidden fade-in"></div>
+
+    <!-- History -->
+    <div id="historySection" class="mt-10 hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-white font-semibold text-lg flex items-center gap-2">
+          <i class="fa-regular fa-clock text-slate-400"></i> Recent Previews
+        </h2>
+        <button id="clearHistory" class="text-xs text-slate-500 hover:text-red-400 transition">Clear all</button>
+      </div>
+      <div id="historyList" class="glass rounded-2xl divide-y divide-white/5 overflow-hidden"></div>
+    </div>
+
+    <div class="mt-10 text-center text-xs text-slate-600 border-t border-white/5 pt-5">
+      <p><i class="fa-solid fa-shield-halved text-red-400 mr-1"></i> Uses official YouTube API. No illegal downloads.</p>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 🔑 PASTE YOUR YOUTUBE API KEY HERE
+    // ============================================================
+    const API_KEY = 'AIzaSyAQjo1I2xm9rsaKy9KDMCYJr3WbLKPybjg';  // <--- REPLACE THIS
+
+    // Category mapping
+    const CATEGORIES = {
+      '1': 'Film & Animation', '2': 'Autos & Vehicles', '10': 'Music',
+      '15': 'Pets & Animals', '17': 'Sports', '18': 'Short Movies',
+      '19': 'Travel & Events', '20': 'Gaming', '21': 'Videoblogging',
+      '22': 'People & Blogs', '23': 'Comedy', '24': 'Entertainment',
+      '25': 'News & Politics', '26': 'Howto & Style', '27': 'Education',
+      '28': 'Science & Technology', '29': 'Nonprofits & Activism',
+      '30': 'Movies', '31': 'Anime/Animation', '32': 'Action/Adventure',
+      '33': 'Classics', '34': 'Comedy', '35': 'Documentary',
+      '36': 'Drama', '37': 'Family', '38': 'Foreign',
+      '39': 'Horror', '40': 'Sci-Fi/Fantasy', '41': 'Thriller',
+      '42': 'Shorts', '43': 'Shows', '44': 'Trailers'
+    };
+
+    // Country codes → flag emoji (rough mapping for common ones)
+    const FLAGS = {
+      US:'🇺🇸', GB:'🇬🇧', CA:'🇨🇦', AU:'🇦🇺', IN:'🇮🇳', BR:'🇧🇷', MX:'🇲🇽',
+      DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', IT:'🇮🇹', JP:'🇯🇵', KR:'🇰🇷', RU:'🇷🇺',
+      CN:'🇨🇳', ID:'🇮🇩', TR:'🇹🇷', SA:'🇸🇦', AE:'🇦🇪', EG:'🇪🇬', NG:'🇳🇬',
+      ZA:'🇿🇦', AR:'🇦🇷', CL:'🇨🇱', CO:'🇨🇴', PE:'🇵🇪', PH:'🇵🇭', TH:'🇹🇭',
+      VN:'🇻🇳', MY:'🇲🇾', SG:'🇸🇬', NZ:'🇳🇿', IE:'🇮🇪', NL:'🇳🇱', BE:'🇧🇪',
+      CH:'🇨🇭', AT:'🇦🇹', SE:'🇸🇪', NO:'🇳🇴', DK:'🇩🇰', FI:'🇫🇮', PL:'🇵🇱',
+      PT:'🇵🇹', GR:'🇬🇷', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', UA:'🇺🇦', IL:'🇮🇱',
+      PK:'🇵🇰', BD:'🇧🇩', LK:'🇱🇰', NP:'🇳🇵', MM:'🇲🇲', KH:'🇰🇭', LA:'🇱🇦'
+    };
+
+    // DOM refs
+    const form = document.getElementById('videoForm');
+    const urlInput = document.getElementById('videoUrl');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const output = document.getElementById('output');
+    const loading = document.getElementById('loading');
+    const historySection = document.getElementById('historySection');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+    const themeToggle = document.getElementById('themeToggle');
+    const copyToast = document.getElementById('copyToast');
+    const channelModal = document.getElementById('channelModal');
+    const channelModalContent = document.getElementById('channelModalContent');
+    const videoModal = document.getElementById('videoModal');
+    const videoModalContent = document.getElementById('videoModalContent');
+    const recentModal = document.getElementById('recentModal');
+    const recentModalContent = document.getElementById('recentModalContent');
+    const todayModal = document.getElementById('todayModal');
+    const todayModalContent = document.getElementById('todayModalContent');
+    const liveModal = document.getElementById('liveModal');
+    const liveModalContent = document.getElementById('liveModalContent');
+    const thumbModal = document.getElementById('thumbModal');
+    const thumbModalContent = document.getElementById('thumbModalContent');
+    const liveTop = document.getElementById('liveTop');
+
+    // State
+    let liveInterval = null;
+    let countdownInterval = null;
+    let currentVideoId = null;
+    let currentData = null;
+    let countdownValue = 3;
+
+    // Theme toggle
+    let isLightMode = false;
+    themeToggle.addEventListener('click', () => {
+      isLightMode = !isLightMode;
+      document.body.classList.toggle('light-mode', isLightMode);
+      themeToggle.innerHTML = isLightMode ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    });
+
+    // Toast helper
+    function showToast() {
+      copyToast.classList.add('show');
+      setTimeout(() => copyToast.classList.remove('show'), 2000);
+    }
+
+    // Modal functions
+    function openChannelModal() {
+      if (!currentData) return;
+      const { channel, analytics } = currentData;
+      const countryFlag = channel.country ? (FLAGS[channel.country] || '🌍') : '🌍';
+      channelModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Channel Details</h2>
+          <button onclick="closeChannelModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="flex items-center gap-4 mb-4">
+          <img src="${channel.thumbnail}" alt="${channel.name}" class="w-16 h-16 rounded-full border-2 border-red-500/30 shadow-2xl" />
+          <div>
+            <h3 class="text-xl font-semibold text-white">${channel.name}</h3>
+            <p class="text-slate-400 text-sm">${channel.country ? `${countryFlag} ${channel.country}` : 'Country not specified'}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Subscribers</div>
+            <div class="text-lg font-bold text-white">${channel.subscribers}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Total Views</div>
+            <div class="text-lg font-bold text-white">${channel.totalViews}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Total Videos</div>
+            <div class="text-lg font-bold text-white">${channel.totalVideos}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Joined</div>
+            <div class="text-lg font-bold text-white">${channel.joined}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Hidden Subs</div>
+            <div class="text-lg font-bold text-white">${channel.hiddenSubs ? 'Yes' : 'No'}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Subs/Video</div>
+            <div class="text-lg font-bold text-white">${compactNumber(Math.round(analytics.subsPerVideo))}</div>
+          </div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5 mb-4 shadow-inner">
+          <div class="text-xs text-slate-500 mb-1">Channel Description</div>
+          <p class="text-sm text-slate-300 whitespace-pre-wrap">${channel.description || 'No description available.'}</p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <a href="https://www.youtube.com/channel/${currentData.video.channelId}" target="_blank" rel="noopener"
+             class="btn-red rounded-xl px-4 py-2 text-sm font-semibold text-white">
+            <i class="fa-brands fa-youtube mr-1"></i> Visit Channel
+          </a>
+        </div>
+      `;
+      channelModal.classList.add('show');
+    }
+
+    function closeChannelModal() {
+      channelModal.classList.remove('show');
+    }
+    channelModal.addEventListener('click', (e) => {
+      if (e.target === channelModal) closeChannelModal();
+    });
+
+    // Video modal functions
+    function openVideoModal() {
+      if (!currentData) return;
+      const { video, channel, analytics } = currentData;
+      const tagsText = video.tags.length > 0 ? video.tags.join(', ') : 'No tags';
+      videoModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Video Details</h2>
+          <button onclick="closeVideoModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="mb-4">
+          <div class="text-xs text-slate-500 mb-1">Title</div>
+          <p class="text-white font-semibold">${video.title}</p>
+        </div>
+        <div class="mb-4">
+          <div class="text-xs text-slate-500 mb-1">Description</div>
+          <p class="text-sm text-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto">${video.description || 'No description.'}</p>
+        </div>
+        <div class="mb-4">
+          <div class="text-xs text-slate-500 mb-1">Tags (${video.tags.length})</div>
+          <div class="flex flex-wrap gap-1">${video.tags.map(t => `<span class="tag-chip">#${t}</span>`).join('') || '<span class="text-slate-500 text-sm">No tags</span>'}</div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Category</div>
+            <div class="text-lg font-bold text-white">${video.categoryName}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Published</div>
+            <div class="text-lg font-bold text-white">${video.publishedAt}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Duration</div>
+            <div class="text-lg font-bold text-white">${video.duration}</div>
+          </div>
+          <div class="stat-box rounded-xl p-3 text-center">
+            <div class="text-xs text-slate-500">Views</div>
+            <div class="text-lg font-bold text-white">${video.views}</div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="copyVideoInfo()" class="btn-export rounded-xl px-4 py-2 text-sm font-semibold text-slate-300">
+            <i class="fa-regular fa-copy mr-1"></i> Copy All Info
+          </button>
+        </div>
+      `;
+      videoModal.classList.add('show');
+    }
+
+    function closeVideoModal() {
+      videoModal.classList.remove('show');
+    }
+    videoModal.addEventListener('click', (e) => {
+      if (e.target === videoModal) closeVideoModal();
+    });
+
+    function copyVideoInfo() {
+      if (!currentData) return;
+      const { video, channel, analytics } = currentData;
+      const text = `Title: ${video.title}\nDescription: ${video.description || 'No description'}\nTags: ${video.tags.join(', ') || 'No tags'}\nCategory: ${video.categoryName}\nPublished: ${video.publishedAt}\nDuration: ${video.duration}\nViews: ${video.views}\nLikes: ${video.likes}\nComments: ${video.comments}\nChannel: ${channel.name}\nSubscribers: ${channel.subscribers}`;
+      navigator.clipboard.writeText(text).then(() => showToast());
+    }
+
+    // Recent uploads modal
+    async function openRecentUploads() {
+      if (!currentData) return;
+      closeAllModals();
+      const channelId = currentData.video.channelId;
+      recentModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Recent Uploads</h2>
+          <button onclick="closeRecentModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="text-center py-8">
+          <div class="inline-block w-8 h-8 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-sm mt-2">Fetching recent videos...</p>
+        </div>
+      `;
+      recentModal.classList.add('show');
+
+      try {
+        // Fetch uploads playlist
+        const playlistUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`;
+        const playlistRes = await fetch(playlistUrl);
+        const playlistData = await playlistRes.json();
+        const uploadsPlaylistId = playlistData.items[0].contentDetails.relatedPlaylists.uploads;
+
+        // Fetch recent videos from playlist
+        const videosUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=20&key=${API_KEY}`;
+        const videosRes = await fetch(videosUrl);
+        const videosData = await videosRes.json();
+
+        const now = new Date();
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+        const todayVideos = videosData.items.filter(item => {
+          const pubDate = new Date(item.snippet.publishedAt);
+          return pubDate >= todayStart;
+        });
+
+        const recentVideos = videosData.items.filter(item => {
+          const pubDate = new Date(item.snippet.publishedAt);
+          return pubDate >= fiveMinAgo;
+        });
+
+        if (todayVideos.length === 0 && recentVideos.length === 0) {
+          recentModalContent.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+              <h2 class="text-2xl font-bold text-white">Recent Uploads</h2>
+              <button onclick="closeRecentModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="text-center py-8">
+              <i class="fa-regular fa-clock text-4xl text-slate-500 mb-3 block"></i>
+              <p class="text-slate-400">No videos uploaded today from this channel.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Build HTML
+        let html = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Recent Uploads</h2>
+            <button onclick="closeRecentModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="mb-4 p-3 rounded-xl" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);">
+            <span class="text-green-400 font-semibold text-sm"><i class="fa-solid fa-bolt mr-1"></i> ${recentVideos.length} uploaded in last 5 min</span>
+          </div>
+          <div class="mb-4 p-3 rounded-xl" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);">
+            <span class="text-blue-400 font-semibold text-sm"><i class="fa-regular fa-calendar mr-1"></i> ${todayVideos.length} uploaded today</span>
+          </div>
+        `;
+
+        // Show recent videos (last 10 min) first with special styling
+        if (recentVideos.length > 0) {
+          html += `<h3 class="text-white font-semibold mb-2 mt-4"><i class="fa-solid fa-bolt text-yellow-400 mr-1"></i> Last 5 Minutes</h3>`;
+          html += `<div class="space-y-2 mb-4">`;
+          recentVideos.forEach(item => {
+            const pubDate = new Date(item.snippet.publishedAt);
+            const minsAgo = Math.max(1, Math.floor((now - pubDate) / 60000));
+            html += `
+              <div class="stat-box rounded-xl p-3 flex items-center gap-3 cursor-pointer" onclick="loadVideo('${item.contentDetails.videoId}')">
+                <img src="${item.snippet.thumbnails.default.url}" class="w-16 h-12 rounded-lg object-cover shadow" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-white text-sm font-medium truncate">${item.snippet.title}</p>
+                  <p class="text-xs" style="color:#fbbf24;"><i class="fa-solid fa-bolt mr-1"></i>${minsAgo} min${minsAgo > 1 ? 's' : ''} ago</p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full" style="background:rgba(251,191,36,0.2);color:#fbbf24;">NEW</span>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        // Show today's videos
+        if (todayVideos.length > 0) {
+          html += `<h3 class="text-white font-semibold mb-2 mt-4"><i class="fa-regular fa-calendar text-blue-400 mr-1"></i> Uploaded Today</h3>`;
+          html += `<div class="space-y-2">`;
+          todayVideos.forEach(item => {
+            const pubDate = new Date(item.snippet.publishedAt);
+            const timeStr = pubDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            html += `
+              <div class="stat-box rounded-xl p-3 flex items-center gap-3 cursor-pointer" onclick="loadVideo('${item.contentDetails.videoId}')">
+                <img src="${item.snippet.thumbnails.default.url}" class="w-16 h-12 rounded-lg object-cover shadow" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-white text-sm font-medium truncate">${item.snippet.title}</p>
+                  <p class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${timeStr}</p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full" style="background:rgba(59,130,246,0.2);color:#93c5fd;">TODAY</span>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        html += `<div class="mt-4 text-center text-xs text-slate-500">Click any video to load it</div>`;
+        recentModalContent.innerHTML = html;
+      } catch (error) {
+        recentModalContent.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Recent Uploads</h2>
+            <button onclick="closeRecentModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="text-center py-8">
+            <i class="fa-solid fa-circle-exclamation text-4xl text-red-500 mb-3 block"></i>
+            <p class="text-red-400">Failed to load recent uploads.</p>
+            <p class="text-slate-500 text-sm mt-1">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function closeRecentModal() {
+      recentModal.classList.remove('show');
+    }
+    recentModal.addEventListener('click', (e) => {
+      if (e.target === recentModal) closeRecentModal();
+    });
+
+    function loadVideo(videoId) {
+      closeAllModals();
+      urlInput.value = `https://youtu.be/${videoId}`;
+      form.dispatchEvent(new Event('submit'));
+    }
+
+    // Today's uploads modal
+    async function openTodayUploads() {
+      closeAllModals();
+      todayModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Today's Uploads</h2>
+          <button onclick="closeTodayModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="text-center py-8">
+          <div class="inline-block w-8 h-8 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-sm mt-2">Searching YouTube for today's videos...</p>
+        </div>
+      `;
+      todayModal.classList.add('show');
+
+      try {
+        const now = new Date();
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        const publishedAfter = startOfDay.toISOString();
+
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&publishedAfter=${publishedAfter}&maxResults=20&key=${API_KEY}`;
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+          todayModalContent.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+              <h2 class="text-2xl font-bold text-white">Today's Uploads</h2>
+              <button onclick="closeTodayModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="text-center py-8">
+              <i class="fa-regular fa-calendar-xmark text-4xl text-slate-500 mb-3 block"></i>
+              <p class="text-slate-400">No videos uploaded today found.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Today's Uploads</h2>
+            <button onclick="closeTodayModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="mb-4 p-3 rounded-xl" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);">
+            <span class="text-blue-400 font-semibold text-sm"><i class="fa-regular fa-calendar mr-1"></i> ${data.items.length} videos uploaded today</span>
+          </div>
+          <div class="space-y-2">
+        `;
+
+        data.items.forEach(item => {
+          const pubDate = new Date(item.snippet.publishedAt);
+          const timeStr = pubDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          const channelName = item.snippet.channelTitle;
+          html += `
+            <div class="stat-box rounded-xl p-3 flex items-center gap-3 cursor-pointer" onclick="loadVideo('${item.id.videoId}')">
+              <img src="${item.snippet.thumbnails.default.url}" class="w-16 h-12 rounded-lg object-cover shadow" />
+              <div class="flex-1 min-w-0">
+                <p class="text-white text-sm font-medium truncate">${item.snippet.title}</p>
+                <p class="text-xs text-slate-400"><i class="fa-regular fa-user mr-1"></i>${channelName} • ${timeStr}</p>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full" style="background:rgba(59,130,246,0.2);color:#93c5fd;">TODAY</span>
+            </div>
+          `;
+        });
+
+        html += `</div><div class="mt-4 text-center text-xs text-slate-500">Click any video to load it</div>`;
+        todayModalContent.innerHTML = html;
+      } catch (error) {
+        todayModalContent.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Today's Uploads</h2>
+            <button onclick="closeTodayModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="text-center py-8">
+            <i class="fa-solid fa-circle-exclamation text-4xl text-red-500 mb-3 block"></i>
+            <p class="text-red-400">Failed to load today's uploads.</p>
+            <p class="text-slate-500 text-sm mt-1">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function closeTodayModal() {
+      todayModal.classList.remove('show');
+    }
+    todayModal.addEventListener('click', (e) => {
+      if (e.target === todayModal) closeTodayModal();
+    });
+
+    // Live Now modal
+    async function openLiveNow() {
+      closeAllModals();
+      liveModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Live Now</h2>
+          <button onclick="closeLiveModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="text-center py-8">
+          <div class="inline-block w-8 h-8 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-sm mt-2">Searching for live streams...</p>
+        </div>
+      `;
+      liveModal.classList.add('show');
+
+      try {
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&eventType=live&maxResults=20&key=${API_KEY}`;
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+          liveModalContent.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+              <h2 class="text-2xl font-bold text-white">Live Now</h2>
+              <button onclick="closeLiveModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="text-center py-8">
+              <i class="fa-solid fa-tower-broadcast text-4xl text-slate-500 mb-3 block"></i>
+              <p class="text-slate-400">No live streams found right now.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Live Now</h2>
+            <button onclick="closeLiveModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="mb-4 p-3 rounded-xl" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);">
+            <span class="text-green-400 font-semibold text-sm"><i class="fa-solid fa-bolt mr-1"></i> ${data.items.length} live streams currently</span>
+          </div>
+          <div class="space-y-2">
+        `;
+
+        data.items.forEach(item => {
+          const channelName = item.snippet.channelTitle;
+          html += `
+            <div class="stat-box rounded-xl p-3 flex items-center gap-3 cursor-pointer" onclick="loadVideo('${item.id.videoId}')">
+              <img src="${item.snippet.thumbnails.default.url}" class="w-16 h-12 rounded-lg object-cover shadow" />
+              <div class="flex-1 min-w-0">
+                <p class="text-white text-sm font-medium truncate">${item.snippet.title}</p>
+                <p class="text-xs text-slate-400"><i class="fa-regular fa-user mr-1"></i>${channelName}</p>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full" style="background:rgba(34,197,94,0.2);color:#4ade80;">LIVE</span>
+            </div>
+          `;
+        });
+
+        html += `</div><div class="mt-4 text-center text-xs text-slate-500">Click any video to load it</div>`;
+        liveModalContent.innerHTML = html;
+      } catch (error) {
+        liveModalContent.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-2xl font-bold text-white">Live Now</h2>
+            <button onclick="closeLiveModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <div class="text-center py-8">
+            <i class="fa-solid fa-circle-exclamation text-4xl text-red-500 mb-3 block"></i>
+            <p class="text-red-400">Failed to load live streams.</p>
+            <p class="text-slate-500 text-sm mt-1">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function closeLiveModal() {
+      liveModal.classList.remove('show');
+    }
+    liveModal.addEventListener('click', (e) => {
+      if (e.target === liveModal) closeLiveModal();
+    });
+
+    // Thumbnail modal
+    function openThumbModal() {
+      if (!currentData) return;
+      closeAllModals();
+      const { video } = currentData;
+      // Try maxresdefault for higher quality, fallback to high
+      const thumbUrl = video.thumbnail.replace('hqdefault', 'maxresdefault');
+      thumbModalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-2xl font-bold text-white">Thumbnail</h2>
+          <button onclick="closeThumbModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="rounded-xl overflow-hidden shadow-2xl">
+          <img src="${thumbUrl}" alt="Thumbnail" class="w-full h-auto object-cover" onerror="this.src='${video.thumbnail}'" />
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button onclick="downloadThumbnail()" class="btn-export rounded-xl px-4 py-2 text-sm font-semibold text-slate-300">
+            <i class="fa-solid fa-download mr-1"></i> Download
+          </button>
+        </div>
+      `;
+      thumbModal.classList.add('show');
+    }
+
+    function closeThumbModal() {
+      thumbModal.classList.remove('show');
+    }
+    thumbModal.addEventListener('click', (e) => {
+      if (e.target === thumbModal) closeThumbModal();
+    });
+
+    function closeAllModals() {
+      closeRecentModal();
+      closeTodayModal();
+      closeLiveModal();
+      closeThumbModal();
+    }
+
+    // Paste - improved with fallback
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        // Try modern clipboard API first
+        const t = await navigator.clipboard.readText();
+        if (t) {
+          urlInput.value = t;
+          showToast();
+          return;
+        }
+      } catch (e) {
+        // Fallback: focus input and let user paste manually
+        urlInput.focus();
+        urlInput.select();
+        showToast();
+      }
+    });
+
+    // Also capture paste event directly on the input
+    urlInput.addEventListener('paste', (e) => {
+      // Let default paste happen
+      setTimeout(() => {
+        // Auto-submit if URL looks valid
+        if (urlInput.value.includes('youtube.com') || urlInput.value.includes('youtu.be')) {
+          form.dispatchEvent(new Event('submit'));
+        }
+      }, 100);
+    });
+
+    // ---------- Helpers ----------
+    function extractId(url) {
+      const patterns = [
+        /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
+        /youtu\.be\/([A-Za-z0-9_-]{11})/,
+        /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/
+      ];
+      for (const p of patterns) { const m = url.match(p); if (m && m[1]) return m[1]; }
+      return null;
+    }
+
+    function formatDuration(iso) {
+      if (!iso) return '--:--';
+      const m = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+      const h = (m[1] || '').replace('H','');
+      const min = (m[2] || '').replace('M','');
+      const s = (m[3] || '').replace('S','');
+      if (h) return `${h}:${min.padStart(2,'0')}:${s.padStart(2,'0')}`;
+      return `${min.padStart(2,'0')}:${s.padStart(2,'0')}`;
+    }
+
+    function rawNumber(n) {
+      if (!n && n !== 0) return '0';
+      return parseInt(n).toLocaleString('en-US');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+    }
+
+    function daysSince(iso) {
+      if (!iso) return 0;
+      const then = new Date(iso);
+      const now = new Date();
+      return Math.max(0, Math.floor((now - then) / 86400000));
+    }
+
+    function compactNumber(n) {
+      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return String(n);
+    }
+
+    function percent(n, decimals = 2) {
+      if (isNaN(n)) return '0.00%';
+      return n.toFixed(decimals) + '%';
+    }
+
+    // ---------- ANIMATE NUMBER (incremental counting) ----------
+    function animateNumber(el, oldVal, newVal) {
+      if (oldVal === newVal) return;
+      const duration = 1000; // 1 second
+      const steps = Math.min(Math.abs(newVal - oldVal), 50); // limit steps for large jumps
+      const stepSize = (newVal - oldVal) / steps;
+      let current = oldVal;
+      let step = 0;
+      const interval = duration / steps;
+      const timer = setInterval(() => {
+        step++;
+        current += stepSize;
+        if (step >= steps) {
+          current = newVal;
+          clearInterval(timer);
+        }
+        el.textContent = Math.round(current).toLocaleString('en-US');
+      }, interval);
+    }
+
+    // ---------- FETCH FULL DATA ----------
+    async function fetchFullData(videoId) {
+      if (API_KEY === 'YOUR_API_KEY_HERE') throw new Error('Set your YouTube API key.');
+
+      const vUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,status&id=${videoId}&key=${API_KEY}`;
+      const vRes = await fetch(vUrl);
+      if (!vRes.ok) { const err = await vRes.json(); throw new Error(err.error?.message || 'Failed to fetch video'); }
+      const vData = await vRes.json();
+      if (!vData.items || vData.items.length === 0) throw new Error('Video not found.');
+      const video = vData.items[0];
+      const channelId = video.snippet.channelId;
+
+      const cUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`;
+      const cRes = await fetch(cUrl);
+      if (!cRes.ok) throw new Error('Failed to fetch channel');
+      const cData = await cRes.json();
+      const channel = cData.items[0];
+
+      // AI detection: check if aiGenerated is explicitly true, else false/undefined
+      const aiGenerated = video.contentDetails?.aiGenerated === true;
+
+      const rawViews = parseInt(video.statistics.viewCount) || 0;
+      const rawLikes = parseInt(video.statistics.likeCount) || 0;
+      const rawComments = parseInt(video.statistics.commentCount) || 0;
+      const rawSubs = parseInt(channel.statistics.subscriberCount) || 0;
+      const ageDays = daysSince(video.snippet.publishedAt);
+
+      // Deep analytics
+      const engagementRate = rawViews > 0 ? ((rawLikes + rawComments) / rawViews) * 100 : 0;
+      const likeRatio = rawViews > 0 ? (rawLikes / rawViews) * 100 : 0;
+      const commentRatio = rawViews > 0 ? (rawComments / rawViews) * 100 : 0;
+      const viewsPerSub = rawSubs > 0 ? rawViews / rawSubs : 0;
+      const viewsPerDay = ageDays > 0 ? rawViews / ageDays : rawViews;
+      const subsPerVideo = channel.statistics.videoCount && parseInt(channel.statistics.videoCount) > 0
+        ? rawSubs / parseInt(channel.statistics.videoCount) : 0;
+      const avgViewsPerVideo = channel.statistics.videoCount && parseInt(channel.statistics.videoCount) > 0
+        ? (parseInt(channel.statistics.viewCount) || 0) / parseInt(channel.statistics.videoCount) : 0;
+
+      // Compare against channel average
+      const viewsVsAvg = avgViewsPerVideo > 0 ? (rawViews / avgViewsPerVideo) * 100 : 0;
+
+      return {
+        video: {
+          title: video.snippet.title,
+          description: video.snippet.description,
+          thumbnail: video.snippet.thumbnails.high.url,
+          publishedAt: formatDate(video.snippet.publishedAt),
+          publishedIso: video.snippet.publishedAt,
+          ageDays,
+          tags: video.snippet.tags || [],
+          categoryId: video.snippet.categoryId,
+          categoryName: CATEGORIES[video.snippet.categoryId] || 'Unknown',
+          duration: formatDuration(video.contentDetails.duration),
+          views: rawNumber(video.statistics.viewCount),
+          likes: rawNumber(video.statistics.likeCount),
+          comments: rawNumber(video.statistics.commentCount),
+          rawViews,
+          rawLikes,
+          rawComments,
+          embeddable: video.status.embeddable,
+          aiGenerated: aiGenerated,
+          madeForKids: video.contentDetails?.madeForKids || false,
+          hasMadeForKids: video.contentDetails?.hasMadeForKids || false,
+          licensedContent: video.contentDetails?.licensedContent || false,
+          channelId: channelId,
+          liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
+        },
+        channel: {
+          name: channel.snippet.title,
+          description: channel.snippet.description,
+          thumbnail: channel.snippet.thumbnails.default.url,
+          subscribers: rawNumber(channel.statistics.subscriberCount),
+          totalViews: rawNumber(channel.statistics.viewCount),
+          totalVideos: rawNumber(channel.statistics.videoCount),
+          rawSubs,
+          rawTotalViews: parseInt(channel.statistics.viewCount) || 0,
+          rawTotalVideos: parseInt(channel.statistics.videoCount) || 0,
+          joined: formatDate(channel.snippet.publishedAt),
+          country: channel.snippet.country || null,
+          hiddenSubs: channel.statistics.hiddenSubscriberCount === true,
+        },
+        analytics: {
+          engagementRate,
+          likeRatio,
+          commentRatio,
+          viewsPerSub,
+          viewsPerDay,
+          subsPerVideo,
+          avgViewsPerVideo,
+          viewsVsAvg,
+        }
+      };
+    }
+
+    // ---------- EXPORT FUNCTIONS ----------
+    function exportCSV() {
+      if (!currentData) return;
+      const { video, channel, analytics } = currentData;
+      const rows = [
+        ['Metric', 'Value'],
+        ['Video Title', video.title],
+        ['Video ID', currentVideoId],
+        ['Published', video.publishedAt],
+        ['Age (days)', video.ageDays],
+        ['Duration', video.duration],
+        ['Category', video.categoryName],
+        ['Views', video.rawViews],
+        ['Likes', video.rawLikes],
+        ['Comments', video.rawComments],
+        ['Engagement Rate (%)', analytics.engagementRate.toFixed(2)],
+        ['Like Ratio (%)', analytics.likeRatio.toFixed(2)],
+        ['Comment Ratio (%)', analytics.commentRatio.toFixed(2)],
+        ['Views/Day', analytics.viewsPerDay.toFixed(2)],
+        ['Views/Subscriber', analytics.viewsPerSub.toFixed(2)],
+        ['Channel', channel.name],
+        ['Subscribers', channel.rawSubs],
+        ['Total Views', channel.rawTotalViews],
+        ['Total Videos', channel.rawTotalVideos],
+        ['Channel Joined', channel.joined],
+        ['Country', channel.country || 'N/A'],
+        ['Hidden Subs', channel.hiddenSubs ? 'Yes' : 'No'],
+        ['AI Generated', video.aiGenerated === true ? 'Yes' : video.aiGenerated === false ? 'No' : 'Unknown'],
+        ['Made for Kids', video.madeForKids ? 'Yes' : 'No'],
+        ['Licensed', video.licensedContent ? 'Yes' : 'No'],
+        ['Live Broadcast', video.liveBroadcastContent],
+        ['Embeddable', video.embeddable ? 'Yes' : 'No']
+      ];
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vidlive_${currentVideoId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJSON() {
+      if (!currentData) return;
+      const data = {
+        videoId: currentVideoId,
+        fetchedAt: new Date().toISOString(),
+        ...currentData
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vidlive_${currentVideoId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function shareVideo() {
+      if (!currentVideoId) return;
+      const url = `https://youtu.be/${currentVideoId}`;
+      navigator.clipboard.writeText(url).then(() => showToast());
+    }
+
+    function copyAllData() {
+      if (!currentData) return;
+      const text = JSON.stringify(currentData, null, 2);
+      navigator.clipboard.writeText(text).then(() => showToast());
+    }
+
+    function downloadThumbnail() {
+      if (!currentData) return;
+      const url = currentData.video.thumbnail;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `thumbnail_${currentVideoId}.jpg`;
+      a.click();
+    }
+
+    // ---------- RENDER (NO IFRAME = NO ERROR 153) ----------
+    function renderOutput(videoId, data, isLiveUpdate = false) {
+      const { video, channel, analytics } = data;
+      currentVideoId = videoId;
+      currentData = data;
+
+      // Show top live indicator
+      liveTop.classList.remove('hidden');
+
+      // Tags
+      const tagsHtml = video.tags.length > 0
+        ? `<div class="flex flex-wrap gap-1 mt-2">
+            ${video.tags.slice(0, 15).map(t => `<span class="tag-chip">#${t}</span>`).join('')}
+            ${video.tags.length > 15 ? `<span class="tag-chip text-slate-500">+${video.tags.length - 15} more</span>` : ''}
+          </div>`
+        : '<div class="text-xs text-slate-500 mt-1">No tags</div>';
+
+      // AI badge
+      let aiBadgeHtml = '';
+      if (video.aiGenerated === true) {
+        aiBadgeHtml = `<span class="badge ai-badge"><i class="fa-regular fa-circle-check"></i> AI‑Generated</span>`;
+      } else if (video.aiGenerated === false) {
+        aiBadgeHtml = `<span class="badge no-ai-badge"><i class="fa-regular fa-circle-xmark"></i> No AI label</span>`;
+      } else {
+        aiBadgeHtml = `<span class="badge unknown-ai-badge"><i class="fa-regular fa-circle-question"></i> AI status unknown</span>`;
+      }
+
+      const kidsBadge = video.madeForKids || video.hasMadeForKids
+        ? `<span class="badge" style="background:rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.2);color:#93c5fd;"><i class="fa-regular fa-child"></i> Made for Kids</span>`
+        : '';
+
+      const licenseBadge = video.licensedContent
+        ? `<span class="badge" style="background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.15);color:#fcd34d;"><i class="fa-regular fa-copyright"></i> Licensed</span>`
+        : '';
+
+      const countryFlag = channel.country ? (FLAGS[channel.country] || '🌍') : null;
+      const countryBadge = channel.country
+        ? `<span class="badge" style="background:rgba(56,189,248,0.1);border-color:rgba(56,189,248,0.15);color:#7dd3fc;"><i class="fa-solid fa-location-dot mr-1"></i>${countryFlag} ${channel.country}</span>`
+        : '';
+
+      const hiddenSubsBadge = channel.hiddenSubs
+        ? `<span class="badge" style="background:rgba(244,63,94,0.1);border-color:rgba(244,63,94,0.15);color:#fda4af;"><i class="fa-solid fa-eye-slash"></i> Sub count hidden</span>`
+        : '';
+
+      // Live broadcast badge
+      let liveBadge = '';
+      if (video.liveBroadcastContent === 'live') {
+        liveBadge = `<span class="badge" style="background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.3);color:#4ade80;"><i class="fa-solid fa-tower-broadcast"></i> LIVE NOW</span>`;
+      } else if (video.liveBroadcastContent === 'upcoming') {
+        liveBadge = `<span class="badge" style="background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.3);color:#fbbf24;"><i class="fa-regular fa-clock"></i> Upcoming</span>`;
+      }
+
+      // Compare views vs channel average
+      const viewsVsAvgPct = analytics.viewsVsAvg;
+      const compareClass = viewsVsAvgPct >= 100 ? 'compare-up' : viewsVsAvgPct < 100 ? 'compare-down' : 'compare-same';
+      const compareIcon = viewsVsAvgPct >= 100 ? 'fa-arrow-up' : viewsVsAvgPct < 100 ? 'fa-arrow-down' : 'fa-equals';
+      const compareText = viewsVsAvgPct >= 100 ? 'above avg' : viewsVsAvgPct < 100 ? 'below avg' : 'at avg';
+
+      // If live update, only refresh stats
+      if (isLiveUpdate && document.getElementById('statsContainer')) {
+        const viewsEl = document.getElementById('liveViews');
+        const likesEl = document.getElementById('liveLikes');
+        const commentsEl = document.getElementById('liveComments');
+        const subsEl = document.getElementById('liveSubs');
+        const timeEl = document.getElementById('liveTime');
+        const viewsDayEl = document.getElementById('liveViewsDay');
+        const engEl = document.getElementById('liveEngRate');
+        const likeEl = document.getElementById('liveLikeRatio');
+
+        if (viewsEl && viewsEl.textContent !== video.views) {
+          const oldVal = parseInt(viewsEl.textContent.replace(/,/g, '')) || 0;
+          const newVal = video.rawViews;
+          animateNumber(viewsEl, oldVal, newVal);
+          viewsEl.parentElement.classList.add('stat-flash');
+          if (newVal > oldVal) {
+            viewsEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-green-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+            viewsEl.parentElement.appendChild(trend);
+          } else if (newVal < oldVal) {
+            viewsEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-red-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+            viewsEl.parentElement.appendChild(trend);
+          }
+          setTimeout(() => viewsEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (likesEl && likesEl.textContent !== video.likes) {
+          const oldVal = parseInt(likesEl.textContent.replace(/,/g, '')) || 0;
+          const newVal = video.rawLikes;
+          animateNumber(likesEl, oldVal, newVal);
+          likesEl.parentElement.classList.add('stat-flash');
+          if (newVal > oldVal) {
+            likesEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-green-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+            likesEl.parentElement.appendChild(trend);
+          } else if (newVal < oldVal) {
+            likesEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-red-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+            likesEl.parentElement.appendChild(trend);
+          }
+          setTimeout(() => likesEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (commentsEl && commentsEl.textContent !== video.comments) {
+          commentsEl.textContent = video.comments;
+          commentsEl.parentElement.classList.add('stat-flash');
+          setTimeout(() => commentsEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (subsEl && subsEl.textContent !== channel.subscribers) {
+          const oldVal = parseInt(subsEl.textContent.replace(/,/g, '')) || 0;
+          const newVal = channel.rawSubs;
+          animateNumber(subsEl, oldVal, newVal);
+          subsEl.parentElement.classList.add('stat-flash');
+          if (newVal > oldVal) {
+            subsEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-green-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+            subsEl.parentElement.appendChild(trend);
+          } else if (newVal < oldVal) {
+            subsEl.parentElement.querySelector('.trend-indicator')?.remove();
+            const trend = document.createElement('span');
+            trend.className = 'trend-indicator text-red-400 text-xs ml-1';
+            trend.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+            subsEl.parentElement.appendChild(trend);
+          }
+          setTimeout(() => subsEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (viewsDayEl && viewsDayEl.textContent !== compactNumber(Math.round(analytics.viewsPerDay))) {
+          viewsDayEl.textContent = compactNumber(Math.round(analytics.viewsPerDay));
+          viewsDayEl.parentElement.classList.add('stat-flash');
+          setTimeout(() => viewsDayEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (engEl && engEl.textContent !== percent(analytics.engagementRate)) {
+          engEl.textContent = percent(analytics.engagementRate);
+          engEl.parentElement.classList.add('stat-flash');
+          setTimeout(() => engEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (likeEl && likeEl.textContent !== percent(analytics.likeRatio)) {
+          likeEl.textContent = percent(analytics.likeRatio);
+          likeEl.parentElement.classList.add('stat-flash');
+          setTimeout(() => likeEl.parentElement.classList.remove('stat-flash'), 600);
+        }
+        if (timeEl) {
+          const now = new Date();
+          timeEl.textContent = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        }
+        return;
+      }
+
+      // ---- FULL RENDER ----
+      output.className = 'mt-8 fade-in';
+      output.innerHTML = `
+        <div class="glass rounded-3xl overflow-hidden shadow-2xl">
+          <!-- Thumbnail overlay -->
+          <div class="aspect-video relative bg-black/60 group">
+            <img 
+              src="${video.thumbnail}" 
+              alt="${video.title}" 
+              class="w-full h-full object-cover"
+              onerror="this.src='https://img.youtube.com/vi/${videoId}/hqdefault.jpg'"
+            />
+            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+              <div class="flex gap-3 flex-wrap justify-center px-4">
+                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener"
+                   class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-full flex items-center gap-2 transition transform hover:scale-105 shadow-2xl">
+                  <i class="fa-brands fa-youtube text-xl"></i> Watch on YouTube
+                </a>
+                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener"
+                   class="bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-full flex items-center gap-2 transition transform hover:scale-105 backdrop-blur-sm border border-white/10 shadow-xl">
+                  <i class="fa-solid fa-download"></i> Download
+                </a>
+              </div>
+            </div>
+            <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm border border-white/10 shadow-xl">
+              <i class="fa-regular fa-clock mr-1"></i> ${video.duration}
+            </span>
+            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener"
+               class="absolute bottom-3 left-3 bg-red-600/80 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1 transition backdrop-blur-sm border border-white/10 shadow-lg md:hidden">
+              <i class="fa-brands fa-youtube"></i> Watch
+            </a>
+          </div>
+
+          <!-- Stats -->
+          <div class="p-5 md:p-6 border-b border-white/5" id="statsContainer">
+            <h2 class="text-xl md:text-2xl font-bold text-white title-3d">${video.title}</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+              <div class="stat-box rounded-xl p-3 text-center border border-white/5">
+                <div class="text-xs text-slate-500">Views</div>
+                <div><span id="liveViews" class="text-lg font-bold text-white">${video.views}</span></div>
+              </div>
+              <div class="stat-box rounded-xl p-3 text-center border border-white/5">
+                <div class="text-xs text-slate-500">Likes</div>
+                <div><span id="liveLikes" class="text-lg font-bold text-white">${video.likes}</span></div>
+              </div>
+              <div class="stat-box rounded-xl p-3 text-center border border-white/5">
+                <div class="text-xs text-slate-500">Comments</div>
+                <div><span id="liveComments" class="text-lg font-bold text-white">${video.comments}</span></div>
+              </div>
+              <div class="stat-box rounded-xl p-3 text-center border border-white/5">
+                <div class="text-xs text-slate-500">Subscribers</div>
+                <div><span id="liveSubs" class="text-lg font-bold text-white">${channel.subscribers}</span></div>
+              </div>
+            </div>
+
+            <!-- Meta badges -->
+            <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+              <span class="badge"><i class="fa-regular fa-calendar mr-1"></i> ${video.publishedAt}</span>
+              <span class="badge"><i class="fa-regular fa-hourglass-half mr-1"></i> ${video.ageDays} days old</span>
+              <span class="badge category-badge"><i class="fa-regular fa-tag mr-1"></i> ${video.categoryName}</span>
+              ${aiBadgeHtml}
+              ${kidsBadge}
+              ${licenseBadge}
+              ${countryBadge}
+              ${hiddenSubsBadge}
+              ${liveBadge}
+              <span class="badge ${video.embeddable ? 'text-green-400 border-green-400/20' : 'text-red-400 border-red-400/20'}">
+                ${video.embeddable ? '✅ Embeddable' : '🚫 No embed'}
+              </span>
+            </div>
+
+            <!-- Description -->
+            <div class="mt-2 text-sm text-slate-300 bg-white/5 rounded-xl p-3 border border-white/5 whitespace-pre-wrap max-h-40 overflow-y-auto shadow-inner">
+              ${video.description || 'No description.'}
+            </div>
+
+            <!-- Tags -->
+            <div class="mt-2">
+              <div class="text-xs text-slate-500 mb-1"><i class="fa-regular fa-hashtag mr-1"></i> Tags (${video.tags.length})</div>
+              ${tagsHtml}
+            </div>
+          </div>
+
+          <!-- Deep Analytics -->
+          <div class="p-5 md:p-6 border-b border-white/5">
+            <h3 class="text-white font-semibold flex items-center gap-2 mb-3 title-3d">
+              <i class="fa-solid fa-chart-line text-red-400"></i> Deep Analytics
+              <span class="text-xs text-slate-500 font-normal">(auto‑updates)</span>
+            </h3>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Engagement Rate</div>
+                <div class="text-lg font-bold text-white"><span id="liveEngRate">${percent(analytics.engagementRate)}</span></div>
+                <div class="metric-bar mt-2"><div class="metric-bar-fill" style="width:${Math.min(100, analytics.engagementRate * 10)}%"></div></div>
+                <div class="text-[10px] text-slate-500 mt-1">likes + comments / views</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Like Ratio</div>
+                <div class="text-lg font-bold text-white"><span id="liveLikeRatio">${percent(analytics.likeRatio)}</span></div>
+                <div class="metric-bar mt-2"><div class="metric-bar-fill green" style="width:${Math.min(100, analytics.likeRatio * 20)}%"></div></div>
+                <div class="text-[10px] text-slate-500 mt-1">likes / views</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Views / Day</div>
+                <div class="text-lg font-bold text-white"><span id="liveViewsDay">${compactNumber(Math.round(analytics.viewsPerDay))}</span></div>
+                <div class="metric-bar mt-2"><div class="metric-bar-fill blue" style="width:${Math.min(100, analytics.viewsPerDay / 1000)}%"></div></div>
+                <div class="text-[10px] text-slate-500 mt-1">velocity since publish</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Views / Subscriber</div>
+                <div class="text-lg font-bold text-white">${analytics.viewsPerSub.toFixed(2)}</div>
+                <div class="metric-bar mt-2"><div class="metric-bar-fill purple" style="width:${Math.min(100, analytics.viewsPerSub * 5)}%"></div></div>
+                <div class="text-[10px] text-slate-500 mt-1">reach vs audience</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Comment Ratio</div>
+                <div class="text-lg font-bold text-white">${percent(analytics.commentRatio)}</div>
+                <div class="text-[10px] text-slate-500 mt-1">comments / views</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Avg Views / Video</div>
+                <div class="text-lg font-bold text-white">${compactNumber(Math.round(analytics.avgViewsPerVideo))}</div>
+                <div class="text-[10px] text-slate-500 mt-1">channel average</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Subs / Video</div>
+                <div class="text-lg font-bold text-white">${compactNumber(Math.round(analytics.subsPerVideo))}</div>
+                <div class="text-[10px] text-slate-500 mt-1">channel conversion</div>
+              </div>
+              <div class="stat-box rounded-xl p-3 border border-white/5">
+                <div class="text-xs text-slate-500">Total Views</div>
+                <div class="text-lg font-bold text-white">${channel.totalViews}</div>
+                <div class="text-[10px] text-slate-500 mt-1">all videos</div>
+              </div>
+            </div>
+
+            <!-- Comparison -->
+            <div class="mt-3 stat-box rounded-xl p-4 border border-white/5">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="text-xs text-slate-500">This video vs channel average:</div>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg font-bold ${compareClass}">
+                    <i class="fa-solid ${compareIcon} mr-1"></i>${viewsVsAvgPct.toFixed(0)}%
+                  </span>
+                  <span class="text-xs ${compareClass}">${compareText}</span>
+                </div>
+              </div>
+              <div class="metric-bar mt-2">
+                <div class="metric-bar-fill" style="width:${Math.min(100, viewsVsAvgPct)}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Channel -->
+          <div class="p-5 md:p-6 flex flex-col md:flex-row gap-4 items-start border-b border-white/5">
+            <img src="${channel.thumbnail}" alt="${channel.name}" class="w-14 h-14 rounded-full border-2 border-red-500/30 shadow-2xl" />
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-white title-3d">${channel.name}</h3>
+              <div class="flex flex-wrap gap-3 text-sm text-slate-400 mt-1">
+                <span><i class="fa-regular fa-user mr-1"></i> ${channel.subscribers} subscribers</span>
+                <span><i class="fa-regular fa-eye mr-1"></i> ${channel.totalViews} total views</span>
+                <span><i class="fa-regular fa-video mr-1"></i> ${channel.totalVideos} videos</span>
+                <span><i class="fa-regular fa-calendar mr-1"></i> Joined ${channel.joined}</span>
+              </div>
+              <p class="mt-2 text-sm text-slate-300 bg-white/5 rounded-xl p-3 border border-white/5 shadow-inner">
+                ${channel.description || 'No channel description.'}
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="p-5 md:p-6 flex flex-wrap gap-3 items-center">
+            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener"
+               class="flex-1 min-w-[100px] text-center rounded-xl bg-red-600 hover:bg-red-700 px-4 py-2.5 text-sm font-semibold text-white transition shadow-xl">
+              <i class="fa-brands fa-youtube mr-2"></i> Watch
+            </a>
+            <button onclick="navigator.clipboard.writeText('https://youtu.be/${videoId}').then(()=>showToast())"
+                    class="flex-1 min-w-[100px] text-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300 transition shadow-lg">
+              <i class="fa-regular fa-copy mr-2"></i> Copy
+            </button>
+            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener"
+               class="flex-1 min-w-[100px] text-center rounded-xl btn-download px-4 py-2.5 text-sm font-semibold text-white transition">
+              <i class="fa-solid fa-download mr-2"></i> Download
+            </a>
+            <button onclick="shareVideo()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-share-nodes mr-2"></i> Share
+            </button>
+            <button onclick="exportCSV()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-file-csv mr-2"></i> CSV
+            </button>
+            <button onclick="exportJSON()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-file-code mr-2"></i> JSON
+            </button>
+            <button onclick="copyAllData()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-regular fa-copy mr-2"></i> Copy All
+            </button>
+            <button onclick="downloadThumbnail()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-regular fa-image mr-2"></i> Thumb
+            </button>
+            <button onclick="openChannelModal()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-user mr-2"></i> Channel
+            </button>
+            <button onclick="openVideoModal()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-circle-info mr-2"></i> Video Info
+            </button>
+            <button onclick="openRecentUploads()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-clock-rotate-left mr-2"></i> Recent
+            </button>
+            <button onclick="openTodayUploads()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-regular fa-calendar mr-2"></i> Today
+            </button>
+            <button onclick="openLiveNow()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-solid fa-tower-broadcast mr-2"></i> Live Now
+            </button>
+            <button onclick="openThumbModal()"
+                    class="flex-1 min-w-[100px] text-center rounded-xl btn-export px-4 py-2.5 text-sm font-semibold text-slate-300 transition">
+              <i class="fa-regular fa-image mr-2"></i> Thumbnail
+            </button>
+          </div>
+
+          <!-- Live indicator and countdown (hidden countdown) -->
+          <div class="px-5 pb-5 flex items-center justify-center gap-4 flex-wrap border-t border-white/5 pt-3">
+            <div class="flex items-center gap-2 text-sm text-slate-400">
+              <span class="live-dot"></span>
+              <span class="text-green-400 font-medium">Live</span>
+              <span class="text-slate-500">—</span>
+              <span id="liveTime" class="text-slate-300"></span>
+            </div>
+            <div class="flex items-center gap-2 countdown-hidden">
+              <i class="fa-regular fa-clock text-yellow-400/50"></i>
+              <span id="countdownDisplay" class="text-lg font-bold text-yellow-400/70">
+                <span id="countdownNumber">3</span>s
+              </span>
+            </div>
+          </div>
+
+          <div class="px-5 pb-4 text-xs text-slate-500 text-center">
+            ⚡ Auto‑updates every 3 seconds • Countdown shows next refresh
+          </div>
+        </div>
+      `;
+
+      // Start auto-live
+      startAutoLive();
+
+      saveToHistory(videoId, video.title, channel.name, video.thumbnail);
+    }
+
+    // ---------- AUTO LIVE (no button) ----------
+    function startAutoLive() {
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        clearInterval(countdownInterval);
+      }
+      // Initial time
+      updateLiveTime();
+      // Start countdown from 3
+      countdownValue = 3;
+      updateCountdown();
+
+      // Live refresh every 3 seconds
+      liveInterval = setInterval(() => {
+        if (currentVideoId) {
+          refreshLive();
+        }
+      }, 3000);
+
+      // Countdown update every second
+      countdownInterval = setInterval(() => {
+        countdownValue--;
+        if (countdownValue < 0) {
+          countdownValue = 2; // after refresh, the interval will set to 3 in refreshLive, but we need to sync
+        }
+        updateCountdown();
+      }, 1000);
+    }
+
+    function updateCountdown() {
+      const el = document.getElementById('countdownNumber');
+      if (el) {
+        if (countdownValue <= 0) {
+          el.textContent = '⟳';
+          el.className = 'text-lg font-bold text-green-400';
+        } else {
+          el.textContent = countdownValue;
+          el.className = 'countdown-number';
+        }
+      }
+    }
+
+    function updateLiveTime() {
+      const el = document.getElementById('liveTime');
+      if (el) {
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      }
+    }
+
+    async function refreshLive() {
+      if (!currentVideoId) return;
+      try {
+        const newData = await fetchFullData(currentVideoId);
+        currentData = newData;
+        renderOutput(currentVideoId, newData, true);
+        // Reset countdown to 3 (will be updated by the interval)
+        countdownValue = 3;
+        updateCountdown();
+        updateLiveTime();
+      } catch (e) {
+        console.warn('Live update failed:', e);
+      }
+    }
+
+    // ---------- SUBMIT ----------
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Stop previous auto-live
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        clearInterval(countdownInterval);
+        liveInterval = null;
+        countdownInterval = null;
+      }
+
+      const url = urlInput.value.trim();
+      const videoId = extractId(url);
+      if (!videoId) {
+        output.className = 'mt-8';
+        output.innerHTML = `<div class="glass rounded-3xl p-6 border border-red-500/30 bg-red-500/10 text-red-200 text-center shadow-2xl">
+          <i class="fa-solid fa-triangle-exclamation text-2xl mb-2 block"></i>Invalid YouTube URL.</div>`;
+        return;
+      }
+
+      loading.classList.remove('hidden');
+      output.className = 'mt-8 hidden';
+
+      try {
+        const data = await fetchFullData(videoId);
+        loading.classList.add('hidden');
+        renderOutput(videoId, data, false);
+      } catch (error) {
+        loading.classList.add('hidden');
+        output.className = 'mt-8';
+        output.innerHTML = `<div class="glass rounded-3xl p-6 border border-red-500/30 bg-red-500/10 text-red-200 text-center shadow-2xl">
+          <i class="fa-solid fa-circle-exclamation text-2xl mb-2 block"></i>${error.message}</div>`;
+      }
+    });
+
+    // ---------- HISTORY ----------
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem('vidpro_auto_history')) || []; } catch { return []; }
+    }
+    function saveToHistory(id, title, channel, thumbnail) {
+      let h = getHistory();
+      h = h.filter(item => item.id !== id);
+      h.unshift({ id, title, channel, thumbnail, timestamp: Date.now() });
+      if (h.length > 10) h = h.slice(0, 10);
+      localStorage.setItem('vidpro_auto_history', JSON.stringify(h));
+      renderHistory();
+    }
+    function renderHistory() {
+      const h = getHistory();
+      if (h.length === 0) { historySection.classList.add('hidden'); return; }
+      historySection.classList.remove('hidden');
+      historyList.innerHTML = h.map(item => `
+        <div class="history-item flex items-center gap-3 p-3" data-id="${item.id}">
+          <img src="${item.thumbnail}" alt="${item.title}" class="w-12 h-12 rounded-xl object-cover border border-white/10 shadow-lg" />
+          <div class="flex-1 min-w-0">
+            <p class="text-white text-sm font-medium truncate">${item.title}</p>
+            <p class="text-slate-400 text-xs">${item.channel}</p>
+          </div>
+          <button class="text-slate-500 hover:text-red-400 transition text-xs px-3 py-1 rounded-full bg-white/5 shadow" data-id="${item.id}">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
+      `).join('');
+      historyList.querySelectorAll('[data-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.id;
+          urlInput.value = `https://youtu.be/${id}`;
+          form.dispatchEvent(new Event('submit'));
+        });
+      });
+    }
+    clearHistoryBtn.addEventListener('click', () => {
+      localStorage.removeItem('vidpro_auto_history');
+      renderHistory();
+    });
+
+    // Quick examples
+    document.querySelectorAll('[data-url]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        urlInput.value = btn.dataset.url;
+        form.dispatchEvent(new Event('submit'));
+      });
+    });
+
+    // Init
+    renderHistory();
+    const params = new URLSearchParams(window.location.search);
+    const vid = params.get('v');
+    if (vid) {
+      urlInput.value = `https://youtu.be/${vid}`;
+      form.dispatchEvent(new Event('submit'));
+    }
+    if (API_KEY === 'YOUR_API_KEY_HERE') {
+      console.warn('⚠️ Set your YouTube API key.');
+    }
+  </script>
+
+</body>
+</html>
